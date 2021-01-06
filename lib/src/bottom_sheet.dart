@@ -261,6 +261,7 @@ class _ModalBottomSheetState extends State<ModalBottomSheet>
   VelocityTracker? _velocityTracker;
   DateTime? _startTime;
 
+  bool _skipHandleScrollUpdate = false;
   void _handleScrollUpdate(ScrollNotification notification) {
     assert(notification.context != null);
     //Check if scrollController is used
@@ -271,6 +272,18 @@ class _ModalBottomSheetState extends State<ModalBottomSheet>
 
     if (_scrollController !=
         Scrollable.of(notification.context!)!.widget.controller) return;
+
+    // Quire: this will prevent from accidently triggered modal pull down dimiss.
+    // NOTE: this fix didn't consider with the reverse list case
+    // reproduce steps:
+    // 1. make the content has more then the viewport
+    // 2. scroll a little bit down but not to the end.
+    // 3. start scroll down to the end
+    // 4. you will see the modal is trigged to start dismiss down
+    if (notification is ScrollStartNotification)
+      _skipHandleScrollUpdate = notification.metrics.extentBefore != 0;
+    if (_skipHandleScrollUpdate)
+      return;
 
     final scrollPosition = _scrollController.position;
 
