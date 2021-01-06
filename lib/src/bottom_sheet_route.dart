@@ -9,6 +9,8 @@ import '../modal_bottom_sheet.dart';
 
 const Duration _bottomSheetDuration = Duration(milliseconds: 400);
 
+typedef Future OnPop(BuildContext context);
+
 class _ModalBottomSheet<T> extends StatefulWidget {
   const _ModalBottomSheet({
     Key? key,
@@ -19,6 +21,7 @@ class _ModalBottomSheet<T> extends StatefulWidget {
     this.expanded = false,
     this.enableDrag = true,
     this.animationCurve,
+    this.onPop
   })  : assert(expanded != null),
         assert(enableDrag != null),
         super(key: key);
@@ -30,6 +33,7 @@ class _ModalBottomSheet<T> extends StatefulWidget {
   final bool enableDrag;
   final AnimationController? secondAnimationController;
   final Curve? animationCurve;
+  final OnPop? onPop;
 
   @override
   _ModalBottomSheetState<T> createState() => _ModalBottomSheetState<T>();
@@ -109,7 +113,11 @@ class _ModalBottomSheetState<T> extends State<_ModalBottomSheet<T>> {
                     : null,
                 onClosing: () {
                   if (widget.route.isCurrent) {
-                    Navigator.of(context).pop();
+                    if (widget.onPop != null) {
+                      widget.onPop!(context);
+                    } else {
+                      Navigator.of(context).pop();
+                    }
                   }
                 },
                 child: child!,
@@ -143,6 +151,7 @@ class ModalBottomSheetRoute<T> extends PopupRoute<T> {
     this.animationCurve,
     this.duration,
     RouteSettings? settings,
+    this.onPop,
   })  : assert(expanded != null),
         assert(isDismissible != null),
         assert(enableDrag != null),
@@ -162,6 +171,8 @@ class ModalBottomSheetRoute<T> extends PopupRoute<T> {
 
   final AnimationController? secondAnimationController;
   final Curve? animationCurve;
+
+  final OnPop? onPop;
 
   @override
   Duration get transitionDuration => duration ?? _bottomSheetDuration;
@@ -205,6 +216,7 @@ class ModalBottomSheetRoute<T> extends PopupRoute<T> {
         bounce: bounce,
         enableDrag: enableDrag,
         animationCurve: animationCurve,
+        onPop: onPop
       ),
     );
     return bottomSheet;
